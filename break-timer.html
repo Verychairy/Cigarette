@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Digital Break Timer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            margin: 0;
+            background: black;
+            color: white;
+            font-family: Arial, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .break-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: black;
+            text-align: center;
+        }
+        
+        .cigarette-img {
+            width: 80%;
+            max-width: 300px;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .timer {
+            position: fixed;
+            width: 100%;
+            bottom: 25%;
+            left: 0;
+            font-size: 8vw;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="break-screen">
+        <img id="cigaretteImage" src="resources/cigarette.png" class="cigarette-img">
+        <div id="timer" class="timer">15:00</div>
+    </div>
+
+    <script>
+        const BREAK_TIME = 15 * 60;
+        let timeRemaining = BREAK_TIME;
+        let isRunning = false;
+        
+        const exhaleSound = new Audio('resources/exhale.wav');
+        const finishSound = new Audio('resources/cigarette_finish.wav');
+
+        // Add user interaction handler
+        document.addEventListener('click', () => {
+            if (!isRunning) {
+                startBreak();
+            }
+        });
+
+        function startBreak() {
+            if (!isRunning) {
+                isRunning = true;
+                // Try to play sound after user interaction
+                exhaleSound.play()
+                    .then(() => {
+                        startTimer();
+                    })
+                    .catch(error => {
+                        console.log('Sound play failed:', error);
+                        // Start timer even if sound fails
+                        startTimer();
+                    });
+            }
+        }
+
+        function startTimer() {
+            timeRemaining = BREAK_TIME;
+            updateTimer();
+        }
+        
+        function updateTimer() {
+            if (!isRunning) return;
+            
+            if (timeRemaining > 0) {
+                const minutes = Math.floor(timeRemaining / 60);
+                const seconds = timeRemaining % 60;
+                document.getElementById('timer').textContent = 
+                    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                timeRemaining--;
+                
+                if (timeRemaining === 0) {
+                    document.getElementById('cigaretteImage').src = 'resources/finished_cigarette.png';
+                    finishSound.play().catch(console.warn);
+                    isRunning = false;
+                }
+                
+                setTimeout(updateTimer, 1000);
+            }
+        }
+
+        // Optional: Add message to prompt user interaction
+        document.body.insertAdjacentHTML('beforeend', 
+            '<div style="position:fixed; bottom:20px; width:100%; text-align:center; color:gray;">Tap anywhere to start</div>'
+        );
+    </script>
+</body>
+</html> 
